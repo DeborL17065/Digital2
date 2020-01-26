@@ -57,8 +57,8 @@ void main(void) {
             unsigned char f=0;
             Jugador1 = 0;
             Jugador2 = 0;
-            PORTD =0;
-            PORTA =0;
+            PORTD =0; //se limpia el puerto D
+            PORTA =0; //se limpia el puerto A
             Led_G1 =0;
             Led_G2 =0;
             for(f=0;f<4;f++){
