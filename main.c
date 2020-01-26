@@ -134,12 +134,12 @@ void juego(void){
 void init(void) {
     TRISA =0b00000000;
     TRISC =0b00000000;
-    PORTC =0;
+    PORTC =0; //se limpia el puerto C
     TRISD =0b00000000;
     TRISB =0;
-    PORTD =0;
-    PORTB =0;
-    PORTA =0;
+    PORTD =0; //se limpia el puerto D
+    PORTB =0; //se limpia el puerto B
+    PORTA =0; //se limpia el puerto A
     TRISE =0b11100000;
     PORTE =0;
     ANSELH =0;
