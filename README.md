@@ -1,2 +1,2 @@
-# Digital2-Lab1
+# Digital2
 Juego Carrera
