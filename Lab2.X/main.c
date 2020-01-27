@@ -57,9 +57,9 @@ void main(void) {
             while((PULSADOR_INICIO ==1));  //ANTIREBOTE 
             unsigned char f=0;
             Jugador1 = 0; //limpiando la variable
-            Jugador2 = 0;
-            PORTD =0;
-            PORTA =0;
+            Jugador2 = 0; //limpiando la variable
+            PORTD =0;  //limpiando el Puerto D
+            PORTA =0; //limpiando el Puerto A
             Led_G1 =0;
             Led_G2 =0;
             for(f=0;f<4;f++){
