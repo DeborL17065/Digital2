@@ -34,7 +34,7 @@
 #define VARIABLE     RA5
 #define _XTAL_FREQ   4000000
 
-uint8_t  DISPLAY[16]={0x3F,0x06,0x5B,0x4F,0x66,0x6D,0x7D,0x07,0x7F,0x6F,0x77,0x7C,0x39,0x5E,0x79,0x71}; // definimos el vector que contiede los valores a desplegar en el display
+int  DISPLAY[16]={0x3F,0x06,0x5B,0x4F,0x66,0x6D,0x7D,0x07,0x7F,0x6F,0x77,0x7C,0x39,0x5E,0x79,0x71}; // definimos el vector que contiede los valores a desplegar en el display
 void init(void);
 void CONTADORES(void);
 void delay(unsigned char dms);
@@ -50,48 +50,41 @@ void main(void) {
     init();
     CONF_ADC();
     while (1){
-        
-        CONTADORES();
-        
+        CONTADORES(); 
         ADCON0bits.GO_DONE =1;
         __delay_ms(10);
-      //  delay(10);
-        //while(ADCON0bits.GO_DONE ==1);
-       
-       // PORTD = ADRESH;
-        
-       
-        
-        
-          
-    
+        if (ADRESH > CONT1){ALARMA =1;}
+        else {ALARMA =0;}
+      
     }
     
-    
+    return;
 }
 
 
 
 void __interrupt() isr(void){
     
-    PORTD = CONT1;
+    //PORTD = ADRESH;
     if (PIR1bits.ADIF ==1){ 
         
-        DEC = ADRESH/10;
-        UNI = ADRESH%10;
         
-        
+        UNI =  ADRESH& 0X0F;
+        DEC = (ADRESH & 0XF0)>>4;
+        PORTC =0;
         PORTC = DISPLAY[UNI];
         T1 = 1;
-        __delay_ms(1);
+        __delay_ms(2);
         T1 = 0;
         PORTC = DISPLAY[DEC];
         T2 =1;
-        __delay_ms(1);
-        T2=0;
-      //  PORTD = ADRESH;  
+        __delay_ms(2);
+        T2=0;  
+        
         PIR1bits.ADIF =0;
+        
     }
+    
     
     
 
@@ -99,28 +92,21 @@ void __interrupt() isr(void){
 
 
 void CONTADORES(void){
-    //PORTD = 0b11111111;
+   
     if (PULSADOR_I ==1){   
         Estado1 =1;
     }
     if (Estado1 ==1 && PULSADOR_I ==0){
         Estado1 =0;
-        CONT1 = CONT1 + 1;   
-      //  PORTD = CONT1;
-       // if (CONT1 == 8) {Led_G1=1;}     
-    }
-    
+        CONT1 = CONT1 + 1;       
+    }  
     if (PULSADOR_D ==1){   
         Estado2 =1;
     }
     if (Estado2 ==1 && PULSADOR_D ==0){
         Estado2 =0;
-        CONT1 = CONT1 - 1;   
-      //  PORTD = CONT1;
-       // if (CONT1 == 8) {Led_G1=1;}     
-    }
-    
-    
+        CONT1 = CONT1 - 1;     
+    } 
 }
 
 void init(void) { 
