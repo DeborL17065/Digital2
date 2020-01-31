@@ -23,30 +23,117 @@
 
 #include <xc.h> 
 #include <pic16F887.h>
+#include <stdint.h>
+#include  "_ADC.h"
 
+#define ALARMA       RA4
+#define PULSADOR_I   RE0
+#define PULSADOR_D   RE1
+#define T1           RA2
+#define T2           RA3
+#define VARIABLE     RA5
+#define _XTAL_FREQ   4000000
 
+uint8_t  DISPLAY[16]={0x3F,0x06,0x5B,0x4F,0x66,0x6D,0x7D,0x07,0x7F,0x6F,0x77,0x7C,0x39,0x5E,0x79,0x71}; // definimos el vector que contiede los valores a desplegar en el display
 void init(void);
+void CONTADORES(void);
 void delay(unsigned char dms);
+char Estado1 =0;
+char Estado2 =0;
+
+uint8_t DEC=0;
+uint8_t UNI=0;
+
+uint8_t CONT1=0;
 
 void main(void) {
+    init();
+    CONF_ADC();
+    while (1){
+        
+        CONTADORES();
+        
+        ADCON0bits.GO_DONE =1;
+        __delay_ms(10);
+      //  delay(10);
+        //while(ADCON0bits.GO_DONE ==1);
+       
+       // PORTD = ADRESH;
+        
+       
+        
+        
+          
+    
+    }
+    
+    
+}
 
+
+
+void __interrupt() isr(void){
+    
+    PORTD = CONT1;
+    if (PIR1bits.ADIF ==1){ 
+        
+        DEC = ADRESH/10;
+        UNI = ADRESH%10;
+        
+        
+        PORTC = DISPLAY[UNI];
+        T1 = 1;
+        __delay_ms(1);
+        T1 = 0;
+        PORTC = DISPLAY[DEC];
+        T2 =1;
+        __delay_ms(1);
+        T2=0;
+      //  PORTD = ADRESH;  
+        PIR1bits.ADIF =0;
+    }
+    
+    
 
 }
 
-void init(void) { 
-    TRISA =0b00000000; //se define el puerto A como salidas
-    TRISC =0b00000000; //se define el puerto C como salidas
-    PORTC =0;          //se limpia el puerto C
-    TRISD =0b00000000; //se define el puerto D como salidas
-    TRISB =0;          //se define el puerto B como salidas
-    PORTD =0;          //se limpia el puerto D
-    PORTB =0;          //se limpia el puerto B
-    PORTA =0;          //se limpia el puerto A
-    TRISE =0b11100000; // se definen los primero 3 bits del puerto E como entradas y el resto como salidas
-    PORTE =0;          //se limpia el puerto E
-    ANSELH =0;
-    ANSEL =0;
+
+void CONTADORES(void){
+    //PORTD = 0b11111111;
+    if (PULSADOR_I ==1){   
+        Estado1 =1;
+    }
+    if (Estado1 ==1 && PULSADOR_I ==0){
+        Estado1 =0;
+        CONT1 = CONT1 + 1;   
+      //  PORTD = CONT1;
+       // if (CONT1 == 8) {Led_G1=1;}     
+    }
     
+    if (PULSADOR_D ==1){   
+        Estado2 =1;
+    }
+    if (Estado2 ==1 && PULSADOR_D ==0){
+        Estado2 =0;
+        CONT1 = CONT1 - 1;   
+      //  PORTD = CONT1;
+       // if (CONT1 == 8) {Led_G1=1;}     
+    }
+    
+    
+}
+
+void init(void) { 
+    TRISA =0b00100000; 
+    TRISE =0b00000011; 
+    TRISC =0b00000000; //se define el puerto C como salidas
+    TRISD =0b00000000; //se define el puerto D como salidas
+    PORTC =0;          //se limpia el puerto C
+    PORTD =0;          //se limpia el puerto D
+    PORTA =0;          //se limpia el puerto A
+    PORTE =0; 
+    ANSELH =0;
+    ANSEL =0; 
 }
 
 void delay(unsigned char dms) {
