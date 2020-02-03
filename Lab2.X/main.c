@@ -25,34 +25,36 @@
 #include <pic16F887.h>
 #include <stdint.h>
 #include  "_ADC.h"
+#include "INTERRUPTS.h"
+#include "TMR0.h"
 
 #define ALARMA       RA4
-#define PULSADOR_I   RE0
-#define PULSADOR_D   RE1
+#define PULSADOR_I   RA6
+#define PULSADOR_D   RA7
 #define T1           RA2
 #define T2           RA3
 #define VARIABLE     RA5
 #define _XTAL_FREQ   4000000
 
-int  DISPLAY[16]={0x3F,0x06,0x5B,0x4F,0x66,0x6D,0x7D,0x07,0x7F,0x6F,0x77,0x7C,0x39,0x5E,0x79,0x71}; // definimos el vector que contiede los valores a desplegar en el display
+uint8_t DISPLAY[16]={0x3F,0x06,0x5B,0x4F,0x66,0x6D,0x7D,0x07,0x7F,0x6F,0x77,0x7C,0x39,0x5E,0x79,0x71}; // definimos el vector que contiede los valores a desplegar en el display
 void init(void);
 void CONTADORES(void);
 void delay(unsigned char dms);
-char Estado1 =0;
-char Estado2 =0;
+void MUL_DISPLAY (void);
+uint8_t Estado1 =0;
+uint8_t Estado2 =0;
 
 uint8_t DEC=0;
 uint8_t UNI=0;
-
 uint8_t CONT1=0;
 
 void main(void) {
     init();
     CONF_ADC();
+    CONF_TMR0();
     while (1){
-        CONTADORES(); 
-        ADCON0bits.GO_DONE =1;
-        __delay_ms(10);
+        
+        CONTADORES();
         if (ADRESH > CONT1){ALARMA =1;}
         else {ALARMA =0;}
       
@@ -64,30 +66,38 @@ void main(void) {
 
 
 void __interrupt() isr(void){
+    if (INTCONbits.T0IF == 1){ 
+        INTCONbits.T0IF = 0;
+        TMR0 = 210;
+        MUL_DISPLAY ();       
+    }
     
-    //PORTD = ADRESH;
-    if (PIR1bits.ADIF ==1){ 
-        
-        
-        UNI =  ADRESH& 0X0F;
-        DEC = (ADRESH & 0XF0)>>4;
-        PORTC =0;
-        PORTC = DISPLAY[UNI];
-        T1 = 1;
-        __delay_ms(2);
-        T1 = 0;
-        PORTC = DISPLAY[DEC];
-        T2 =1;
-        __delay_ms(2);
-        T2=0;  
-        
+    if (PIR1bits.ADIF ==1){  
+        PORTD = CONT1; 
         PIR1bits.ADIF =0;
-        
+    }
+    else {
+        ADCON0bits.GO_DONE =1;
+        while(ADCON0bits.GO_DONE ==1);
     }
     
     
-    
+}
 
+void MUL_DISPLAY (void){
+        UNI =  ADRESH& 0X0F;
+        DEC = (ADRESH & 0XF0)>>4;
+        PORTC =0;
+        if(T1 ==0){
+            T2 =0;
+            PORTC = DISPLAY[UNI];
+            T1 = 1; 
+        }
+        else {
+            T1 = 0;
+            PORTC = DISPLAY[DEC];
+            T2 =1;
+        }
 }
 
 
@@ -98,20 +108,20 @@ void CONTADORES(void){
     }
     if (Estado1 ==1 && PULSADOR_I ==0){
         Estado1 =0;
-        CONT1 = CONT1 + 1;       
+        CONT1++ ;      
     }  
     if (PULSADOR_D ==1){   
         Estado2 =1;
     }
     if (Estado2 ==1 && PULSADOR_D ==0){
         Estado2 =0;
-        CONT1 = CONT1 - 1;     
+        CONT1-- ;     
     } 
 }
 
 void init(void) { 
-    TRISA =0b00100000; 
-    TRISE =0b00000011; 
+    TRISA =0b11100000; 
+    TRISE =0b00000000; 
     TRISC =0b00000000; //se define el puerto C como salidas
     TRISD =0b00000000; //se define el puerto D como salidas
     PORTC =0;          //se limpia el puerto C
