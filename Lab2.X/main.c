@@ -49,14 +49,14 @@ uint8_t UNI=0;
 uint8_t CONT1=0;
 
 void main(void) {
-    init();
-    CONF_ADC();
-    CONF_TMR0();
+    init(); 
+    CONF_ADC(); // configuración del ADC
+    CONF_TMR0(); // Configuración del TMR0
     while (1){
         
         CONTADORES();
-        if (ADRESH > CONT1){ALARMA =1;}
-        else {ALARMA =0;}
+        if (ADRESH > CONT1){ALARMA =1;} //alarma que indica cuando el valor analogico AN4 es mayor que el contador.
+        else {ALARMA =0;} 
       
     }
     
@@ -67,36 +67,36 @@ void main(void) {
 
 void __interrupt() isr(void){
     if (INTCONbits.T0IF == 1){ 
-        INTCONbits.T0IF = 0;
-        TMR0 = 210;
-        MUL_DISPLAY ();       
+        INTCONbits.T0IF = 0; //limpiamos la bandera del TMR0
+        TMR0 = 210; 
+        MUL_DISPLAY ();      //se muestra el valor en los displays
     }
     
     if (PIR1bits.ADIF ==1){  
         PORTD = CONT1; 
-        PIR1bits.ADIF =0;
+        PIR1bits.ADIF =0;  //limpiamos la bandera 
     }
     else {
-        ADCON0bits.GO_DONE =1;
-        while(ADCON0bits.GO_DONE ==1);
+        ADCON0bits.GO_DONE =1; //se inicia la conversión
+        while(ADCON0bits.GO_DONE ==1); 
     }
     
     
 }
 
 void MUL_DISPLAY (void){
-        UNI =  ADRESH& 0X0F;
-        DEC = (ADRESH & 0XF0)>>4;
-        PORTC =0;
+        UNI =  ADRESH& 0X0F; // seleccionamos los primeros 4 bits
+        DEC = (ADRESH & 0XF0)>>4; // hacemos swap nibbles para tener el valor de los ultimos 4 bits
+        PORTC =0; // limpiamos el PORTC
         if(T1 ==0){
-            T2 =0;
-            PORTC = DISPLAY[UNI];
-            T1 = 1; 
+            T2 =0;// apagamos el transistor del segundo display
+            PORTC = DISPLAY[UNI]; 
+            T1 = 1; //encendemos el transistor del primer display
         }
         else {
-            T1 = 0;
+            T1 = 0;// apagamos el transistor del primer display
             PORTC = DISPLAY[DEC];
-            T2 =1;
+            T2 =1; // encendemos el transistor del segundo display
         }
 }
 
@@ -106,28 +106,28 @@ void CONTADORES(void){
     if (PULSADOR_I ==1){   
         Estado1 =1;
     }
-    if (Estado1 ==1 && PULSADOR_I ==0){
+    if (Estado1 ==1 && PULSADOR_I ==0){ //boton con antirebote
         Estado1 =0;
-        CONT1++ ;      
+        CONT1++ ;      //se incrementa el contador
     }  
     if (PULSADOR_D ==1){   
         Estado2 =1;
     }
-    if (Estado2 ==1 && PULSADOR_D ==0){
+    if (Estado2 ==1 && PULSADOR_D ==0){ //boton con antirebote
         Estado2 =0;
-        CONT1-- ;     
+        CONT1-- ;   //se decrementa el contador  
     } 
 }
 
 void init(void) { 
-    TRISA =0b11100000; 
+    TRISA =0b11100000; // los ultimos 3 bits como entradas
     TRISE =0b00000000; 
     TRISC =0b00000000; //se define el puerto C como salidas
     TRISD =0b00000000; //se define el puerto D como salidas
     PORTC =0;          //se limpia el puerto C
     PORTD =0;          //se limpia el puerto D
     PORTA =0;          //se limpia el puerto A
-    PORTE =0; 
+    PORTE =0;          //se limpia el puerto E
     ANSELH =0;
     ANSEL =0; 
 }
